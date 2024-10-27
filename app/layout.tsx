@@ -22,6 +22,7 @@ export const metadata: Metadata = {
 }
 
 export default async function RootLayout({
+  // add parallel routes as props to the highest shared layout
   modals,
   children,
 }: Readonly<{
