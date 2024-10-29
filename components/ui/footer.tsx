@@ -1,18 +1,19 @@
-import { cn } from "@/lib/utils"
+import Link from "next/link"
 
-type FooterProps = {
-  transparent?: boolean
-}
-
-export function Footer({ transparent = false }: FooterProps) {
+export function Footer() {
   return (
-    <footer
-      className={cn(
-        "flex items-center flex-col p-4 bg-emerald-500 drop-shadow-sm text-white",
-        transparent && "bg-transparent"
-      )}
-    >
-      Created with a 💻
+    <footer className="flex flex-col gap-2 sm:flex-row py-6 w-full shrink-0 items-center px-4 md:px-6 border-t">
+      <p className="text-xs text-muted-foreground">
+        © 2023 An Authful Next Project. All rights reserved.
+      </p>
+      <nav className="sm:ml-auto flex gap-4 sm:gap-6">
+        <Link className="text-xs hover:underline underline-offset-4" href="#">
+          Terms of Service
+        </Link>
+        <Link className="text-xs hover:underline underline-offset-4" href="#">
+          Privacy
+        </Link>
+      </nav>
     </footer>
   )
 }

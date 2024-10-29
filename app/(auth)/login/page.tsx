@@ -5,7 +5,7 @@ import { SocialOauth } from "@/components/auth/social-oauth"
 
 export default function LoginPage() {
   return (
-    <main className="grid grid-rows-1 justify-center items-center p-8 sm:p-20 max-h-svh">
+    <main className="grid grid-rows-1 justify-center items-center p-8 sm:p-20">
       <Card className="max-w-80">
         <CardHeader>
           <CardTitle>🔐 Login</CardTitle>
