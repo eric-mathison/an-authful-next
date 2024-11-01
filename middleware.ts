@@ -1,26 +1,31 @@
-import { NextResponse } from "next/server"
-import { auth } from "@/lib/auth"
+import NextAuth from "next-auth"
+import authConfig from "@/lib/auth.config"
 
 const protectedRoutes = ["/dashboard", "/settings"]
 const authRoutes = ["/login", "/register"]
 const mainRoute = ["/"]
 
+const { auth } = NextAuth(authConfig)
+
 export default auth((req) => {
-  const path = req.nextUrl.pathname
+  const { nextUrl } = req
+  const path = nextUrl.pathname
+  const isLoggedIn = !!req.auth
+
   const isProtectedRoute = protectedRoutes.some((route) =>
     path.startsWith(route)
   )
   const isAuthRoute = authRoutes.includes(path)
   const isMainRoute = mainRoute.includes(path)
 
-  if (isProtectedRoute && !req.auth) {
-    const redirectUrl = new URL("/login", req.nextUrl)
-    return NextResponse.redirect(redirectUrl)
+  if (isProtectedRoute && !isLoggedIn) {
+    const redirectUrl = new URL("/login", nextUrl)
+    return Response.redirect(redirectUrl)
   }
 
-  if ((isAuthRoute && req.auth) || (isMainRoute && req.auth)) {
-    const redirectUrl = new URL("/dashboard", req.nextUrl)
-    return NextResponse.redirect(redirectUrl)
+  if ((isAuthRoute && isLoggedIn) || (isMainRoute && isLoggedIn)) {
+    const redirectUrl = new URL("/dashboard", nextUrl)
+    return Response.redirect(redirectUrl)
   }
 })
 

@@ -3,7 +3,7 @@ model User {
   name          String?
   email         String?         @unique
   emailVerified DateTime?
-  pwhash        String?
+  password      String?
   role          String?
   image         String?
   accounts      Account[]

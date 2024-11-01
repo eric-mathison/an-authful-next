@@ -1,7 +1,7 @@
-import { verifySession } from "@/lib/dal"
+import { getSession } from "@/lib/session"
 
 export async function GET() {
-  const session = await verifySession()
+  const session = await getSession()
 
   if (!session) {
     return new Response(null, { status: 401 })

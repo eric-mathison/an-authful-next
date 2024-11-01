@@ -1,10 +1,12 @@
 "use server"
 
+import { AuthError } from "next-auth"
 import { signIn } from "@/lib/auth"
 import { loginSchema } from "@/lib/schemas/login"
 
 export type FormState = {
-  message: string
+  success?: string
+  error?: string
   fields?: Record<string, string>
   issues?: string[]
 }
@@ -13,10 +15,6 @@ export async function LoginFormAction(
   prevState: FormState,
   data: FormData
 ): Promise<FormState> {
-  // Validate inputs early so we can return the form with helpful errors
-  // Auth.js throws a simple error if the authentication function fails
-  // for any reason
-  // https://github.com/nextauthjs/next-auth/issues/9900
   const formData = Object.fromEntries(data)
   const parsed = loginSchema.safeParse(formData)
 
@@ -26,40 +24,34 @@ export async function LoginFormAction(
       fields[key] = formData[key].toString()
     }
     return {
-      message: "Invalid form data",
+      error: "Validation failed",
       fields,
       issues: parsed.error.issues.map((issue) => issue.message),
     }
   }
 
+  const { email, password } = parsed.data
   try {
-    await signIn("credentials", data)
-
-    return {
-      message: "Logged in",
-    }
+    await signIn("credentials", { email, password, redirectTo: "/dashboard" })
+    return { success: "" }
   } catch (error) {
     // Using switch case to allow us to send creative messages back to the user
     // but still see helpful errors in server logs
-    switch ((error as Error).message) {
-      case "Invalid email account":
-        return {
-          message:
-            "Oops! Something doesn't look right. Please try to log in again.",
-          fields: parsed.data,
-        }
-      case "Invalid password":
-        return {
-          message:
-            "Oops! Something doesn't look right. Please try to log in again.",
-          fields: parsed.data,
-        }
-      default:
-        console.log(error)
-        return {
-          message: "Woah! Looks like we ran into an error. Please try again.",
-          fields: parsed.data,
-        }
+    if (error instanceof AuthError) {
+      switch (error.type) {
+        case "CredentialsSignin":
+          return {
+            error: "Invalid credentials.",
+            fields: parsed.data,
+          }
+        default:
+          console.log(error)
+          return {
+            error: "Something went wrong!",
+            fields: parsed.data,
+          }
+      }
     }
+    throw error
   }
 }

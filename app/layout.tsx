@@ -1,8 +1,8 @@
 import type { Metadata } from "next"
 import localFont from "next/font/local"
 import "./globals.css"
-import { getUser } from "@/lib/dal"
-import { Header } from "@/components/ui/header"
+import { Header } from "@/components/header"
+import { Footer } from "@/components/footer"
 
 const geistSans = localFont({
   src: "./fonts/GeistVF.woff",
@@ -29,17 +29,15 @@ export default async function RootLayout({
   modals: React.ReactNode
   children: React.ReactNode
 }>) {
-  const user = await getUser()
-  console.log(user)
-
   return (
     <html lang="en">
       <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen`}
+        className={`${geistSans.variable} ${geistMono.variable} antialiased flex flex-col min-h-screen bg-gradient-to-b from-purple-50 to-white`}
       >
         <Header />
         {modals}
         {children}
+        <Footer />
       </body>
     </html>
   )
