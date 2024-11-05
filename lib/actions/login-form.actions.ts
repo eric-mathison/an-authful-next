@@ -31,21 +31,24 @@ export async function LoginFormAction(
   }
 
   const { email, password } = parsed.data
+
   try {
     await signIn("credentials", { email, password, redirectTo: "/dashboard" })
     return { success: "" }
   } catch (error) {
-    // Using switch case to allow us to send creative messages back to the user
-    // but still see helpful errors in server logs
     if (error instanceof AuthError) {
       switch (error.type) {
         case "CredentialsSignin":
           return {
-            error: "Invalid credentials.",
+            error: "Invalid credentials",
+            fields: parsed.data,
+          }
+        case "AccessDenied":
+          return {
+            error: "Email not verified",
             fields: parsed.data,
           }
         default:
-          console.log(error)
           return {
             error: "Something went wrong!",
             fields: parsed.data,

@@ -1,6 +1,6 @@
 import type { NextAuthConfig } from "next-auth"
 import Google from "next-auth/providers/google"
-import { AuthError } from "next-auth"
+import Github from "next-auth/providers/github"
 import Credentials from "next-auth/providers/credentials"
 // import Passkey from "next-auth/providers/passkey"
 import bcrypt from "bcryptjs"
@@ -30,14 +30,11 @@ export default {
     }),
     // For future testing
     // Passkey,
+    Github({
+      allowDangerousEmailAccountLinking: true,
+    }),
     Google({
-      authorization: {
-        params: {
-          prompt: "consent",
-          access_type: "offline",
-          response_type: "code",
-        },
-      },
+      allowDangerousEmailAccountLinking: true,
     }),
   ],
 } satisfies NextAuthConfig

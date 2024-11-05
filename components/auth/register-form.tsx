@@ -41,7 +41,12 @@ export function RegisterForm() {
     <Form {...form}>
       <form
         action={formAction}
-        onSubmit={form.handleSubmit(() => formRef.current?.submit())}
+        onSubmit={(event) => {
+          event.preventDefault()
+          form.handleSubmit(() => formAction(new FormData(formRef.current!)))(
+            event
+          )
+        }}
         className="space-y-8"
         ref={formRef}
       >

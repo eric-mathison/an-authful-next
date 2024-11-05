@@ -4,6 +4,7 @@ import bcrypt from "bcryptjs"
 import { registerSchema } from "@/lib/schemas/register"
 import { db } from "@/lib/db"
 import { getUserByEmail } from "@/lib/data/user"
+import { generateVerificationToken } from "@/lib/tokens"
 
 export type FormState = {
   success?: string
@@ -46,7 +47,9 @@ export async function RegisterFormAction(
     },
   })
 
+  const verificationToken = await generateVerificationToken(email)
+
   // TODO: Send verificiation email
 
-  return { success: "User created" }
+  return { success: "Email confirmation sent" }
 }

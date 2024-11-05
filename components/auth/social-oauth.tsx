@@ -1,7 +1,16 @@
-import { GoogleIcon, MicrosoftIcon } from "hugeicons-react"
+"use client"
+
+import { GoogleIcon, Github01Icon } from "hugeicons-react"
 import { Button } from "@/components/ui/button"
+import { signIn } from "next-auth/react"
 
 export function SocialOauth() {
+  const onClick = (provider: "google" | "github") => {
+    signIn(provider, {
+      redirectTo: "/dashboard",
+    })
+  }
+
   return (
     <div className="flex items-center w-full gap-x-2">
       <Button
@@ -9,7 +18,9 @@ export function SocialOauth() {
         size="lg"
         className="w-full"
         aria-label="Log in with Google"
-        onClick={() => {}}
+        onClick={() => {
+          onClick("google")
+        }}
       >
         <GoogleIcon className="!size-6" />
       </Button>
@@ -18,9 +29,11 @@ export function SocialOauth() {
         size="lg"
         className="w-full"
         aria-label="Log in with Microsoft"
-        onClick={() => {}}
+        onClick={() => {
+          onClick("github")
+        }}
       >
-        <MicrosoftIcon className="!size-6" />
+        <Github01Icon className="!size-6" />
       </Button>
     </div>
   )

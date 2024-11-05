@@ -4,7 +4,8 @@ import { PrismaClient } from "@prisma/client"
 const prisma = new PrismaClient()
 
 async function main() {
-  const adminPass = bcrypt.hashSync("password", 10)
+  const adminPass = await bcrypt.hash("password", 10)
+  const userPass = await bcrypt.hash("password", 10)
   const admin = await prisma.user.upsert({
     where: { email: "admin@test.com" },
     update: {},
@@ -12,9 +13,20 @@ async function main() {
       email: "admin@test.com",
       name: "Admin",
       password: adminPass,
+      role: "ADMIN",
     },
   })
-  console.log({ admin })
+  const user = await prisma.user.upsert({
+    where: { email: "user@test.com" },
+    update: {},
+    create: {
+      email: "user@test.com",
+      name: "User",
+      password: userPass,
+      role: "USER",
+    },
+  })
+  console.log({ admin, user })
 }
 main()
   .then(async () => {

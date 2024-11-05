@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -17,12 +18,19 @@ import { Input } from "@/components/ui/input"
 import { loginSchema } from "@/lib/schemas/login"
 import { LoginFormAction } from "@/lib/actions/login-form.actions"
 import { FormError } from "@/components/form-error"
+import { FormSuccess } from "@/components/form-success"
 import { Loading02Icon } from "hugeicons-react"
 
 export function LoginForm() {
   // Using useFormState to allow us to display server side validation and errors
   // also allows us to support no JS users
   const [formState, formAction] = useFormState(LoginFormAction, {})
+
+  const searchParams = useSearchParams()
+  const oAuthError =
+    searchParams.get("error") === "OAuthAccountNotLinked"
+      ? "Email is already in use with a different provider."
+      : ""
 
   const formRef = useRef<HTMLFormElement>(null)
 
@@ -39,7 +47,12 @@ export function LoginForm() {
     <Form {...form}>
       <form
         action={formAction}
-        onSubmit={form.handleSubmit(() => formRef.current?.submit())}
+        onSubmit={(event) => {
+          event.preventDefault()
+          form.handleSubmit(() => formAction(new FormData(formRef.current!)))(
+            event
+          )
+        }}
         className="space-y-8"
         ref={formRef}
       >
@@ -81,12 +94,15 @@ export function LoginForm() {
             </FormItem>
           )}
         />
+        {oAuthError !== "" && !formState?.error && (
+          <FormError message={oAuthError} />
+        )}
         {formState?.error !== "" && !formState.issues && (
           <FormError message={formState.error} />
         )}
         {formState?.issues && (
           <div>
-            <ul>
+            <ul className="flex flex-col gap-y-1">
               {formState.issues.map((issue) => (
                 <li key={issue} className="flex gap-1">
                   <FormError message={issue} />
@@ -94,6 +110,9 @@ export function LoginForm() {
               ))}
             </ul>
           </div>
+        )}
+        {formState?.success !== "" && (
+          <FormSuccess message={formState.success} />
         )}
         <Button
           disabled={form.formState.isSubmitting}
