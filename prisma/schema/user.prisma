@@ -76,3 +76,12 @@ model Authenticator {
 
   @@unique([userId, credentialId])
 }
+
+model PasswordResetToken {
+  id          String  @id @default(auto()) @map("_id") @db.ObjectId
+  email       String
+  token       String  @unique
+  expires     DateTime
+
+  @@unique([email, token])
+}

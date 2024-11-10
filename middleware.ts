@@ -2,7 +2,7 @@ import NextAuth from "next-auth"
 import authConfig from "@/lib/auth.config"
 
 const protectedRoutes = ["/dashboard", "/settings"]
-const authRoutes = ["/login", "/register"]
+const authRoutes = ["/login", "/register", "/auth/reset", "/auth/new-password"]
 const mainRoute = ["/"]
 
 const { auth } = NextAuth(authConfig)

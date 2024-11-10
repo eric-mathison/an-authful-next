@@ -1,9 +1,11 @@
 "use client"
+
 import { useFormState } from "react-dom"
 import { useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -14,24 +16,27 @@ import {
   FormMessage,
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
-import { registerSchema } from "@/lib/schemas/register"
-import { registerFormAction } from "@/lib/actions/register-form.actions"
 import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
 import { Loading02Icon } from "hugeicons-react"
+import { newPasswordSchema } from "@/lib/schemas/new-password"
+import { newPasswordAction } from "@/lib/actions/new-password.actions"
+import { ResendVerificationLink } from "@/components/auth/resend-verification-link"
 
-export function RegisterForm() {
-  // Using useFormState to allow us to display server side validation and errors
-  // also allows us to support no JS users
-  const [formState, formAction] = useFormState(registerFormAction, {})
+export function NewPasswordForm() {
+  const searchParams = useSearchParams()
+  const token = searchParams?.get("token")
+
+  const [formState, formAction] = useFormState(
+    newPasswordAction.bind(null, token),
+    {}
+  )
 
   const formRef = useRef<HTMLFormElement>(null)
 
-  const form = useForm<z.output<typeof registerSchema>>({
-    resolver: zodResolver(registerSchema),
+  const form = useForm<z.output<typeof newPasswordSchema>>({
+    resolver: zodResolver(newPasswordSchema),
     defaultValues: {
-      name: "",
-      email: "",
       password: "",
       ...(formState?.fields ?? {}),
     },
@@ -52,57 +57,23 @@ export function RegisterForm() {
       >
         <FormField
           control={form.control}
-          name="name"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Name</FormLabel>
-              <FormControl>
-                <Input placeholder="John Doe" {...field} />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="John@email.com"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  type="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
           name="password"
           render={({ field }) => (
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="********"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  type="password"
-                  {...field}
-                />
+                <Input placeholder="********" type="password" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
           )}
         />
-        {formState?.error !== "" && !formState.issues && (
-          <FormError message={formState.error} />
+        {formState?.error && !formState?.issues && (
+          <div className="flex flex-col gap-1">
+            {formState?.error !== "" && !formState.issues && (
+              <FormError message={formState.error} />
+            )}
+          </div>
         )}
         {formState?.issues && (
           <div>
@@ -126,7 +97,7 @@ export function RegisterForm() {
           {form.formState.isSubmitting && (
             <Loading02Icon className="animate-spin w-6 h-6" />
           )}{" "}
-          Create an account
+          Reset Password
         </Button>
       </form>
     </Form>

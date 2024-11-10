@@ -11,7 +11,7 @@ export type FormState = {
   issues?: string[]
 }
 
-export async function LoginFormAction(
+export async function loginFormAction(
   prevState: FormState,
   data: FormData
 ): Promise<FormState> {

@@ -4,6 +4,7 @@ import { useRef } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import {
@@ -16,15 +17,16 @@ import {
 } from "@/components/ui/form"
 import { Input } from "@/components/ui/input"
 import { loginSchema } from "@/lib/schemas/login"
-import { LoginFormAction } from "@/lib/actions/login-form.actions"
+import { loginFormAction } from "@/lib/actions/login-form.actions"
 import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
 import { Loading02Icon } from "hugeicons-react"
+import { ResendVerificationLink } from "@/components/auth/resend-verification-link"
 
 export function LoginForm() {
   // Using useFormState to allow us to display server side validation and errors
   // also allows us to support no JS users
-  const [formState, formAction] = useFormState(LoginFormAction, {})
+  const [formState, formAction] = useFormState(loginFormAction, {})
 
   const searchParams = useSearchParams()
   const oAuthError =
@@ -90,6 +92,14 @@ export function LoginForm() {
                   {...field}
                 />
               </FormControl>
+              <Button
+                size="sm"
+                variant="link"
+                asChild
+                className="px-0 font-normal"
+              >
+                <Link href="/auth/reset">Forgot Password?</Link>
+              </Button>
               <FormMessage />
             </FormItem>
           )}
@@ -97,8 +107,15 @@ export function LoginForm() {
         {oAuthError !== "" && !formState?.error && (
           <FormError message={oAuthError} />
         )}
-        {formState?.error !== "" && !formState.issues && (
-          <FormError message={formState.error} />
+        {formState?.error && !formState?.issues && (
+          <div className="flex flex-col gap-1">
+            {formState?.error !== "" && !formState.issues && (
+              <FormError message={formState.error} />
+            )}
+            {formState?.error === "Email not verified" && !formState.issues && (
+              <ResendVerificationLink email={formState?.fields?.email!} />
+            )}
+          </div>
         )}
         {formState?.issues && (
           <div>

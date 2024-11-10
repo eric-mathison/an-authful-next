@@ -4,7 +4,7 @@ import bcrypt from "bcryptjs"
 import { registerSchema } from "@/lib/schemas/register"
 import { db } from "@/lib/db"
 import { getUserByEmail } from "@/lib/data/user"
-import { generateVerificationToken } from "@/lib/tokens"
+import { sendVerificationTokenAction } from "@/lib/actions/send-verification-token.actions"
 
 export type FormState = {
   success?: string
@@ -13,7 +13,7 @@ export type FormState = {
   issues?: string[]
 }
 
-export async function RegisterFormAction(
+export async function registerFormAction(
   prevState: FormState,
   data: FormData
 ): Promise<FormState> {
@@ -47,9 +47,7 @@ export async function RegisterFormAction(
     },
   })
 
-  const verificationToken = await generateVerificationToken(email)
-
-  // TODO: Send verificiation email
+  await sendVerificationTokenAction(email)
 
   return { success: "Email confirmation sent" }
 }
