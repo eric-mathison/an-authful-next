@@ -1,7 +1,7 @@
 "use client"
 
 import { useFormState } from "react-dom"
-import { useRef } from "react"
+import { useRef, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -18,7 +18,7 @@ import {
 import { Input } from "@/components/ui/input"
 import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
-import { Loading02Icon } from "hugeicons-react"
+import { Loading02Icon, ViewIcon, ViewOffIcon } from "hugeicons-react"
 import { newPasswordSchema } from "@/lib/schemas/new-password"
 import { newPasswordAction } from "@/lib/actions/new-password.actions"
 import { ResendVerificationLink } from "@/components/auth/resend-verification-link"
@@ -33,6 +33,7 @@ export function NewPasswordForm() {
   )
 
   const formRef = useRef<HTMLFormElement>(null)
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
 
   const form = useForm<z.output<typeof newPasswordSchema>>({
     resolver: zodResolver(newPasswordSchema),
@@ -62,7 +63,30 @@ export function NewPasswordForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input placeholder="********" type="password" {...field} />
+                <div className="relative">
+                  <Input
+                    placeholder="********"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    type={isPasswordVisible ? "text" : "password"}
+                    {...field}
+                  />
+                  {isPasswordVisible ? (
+                    <ViewIcon
+                      className="absolute w-6 h-6 right-2 top-1.5 z-10 cursor-pointer text-muted-foreground"
+                      onClick={() => {
+                        setIsPasswordVisible(!isPasswordVisible)
+                      }}
+                    />
+                  ) : (
+                    <ViewOffIcon
+                      className="absolute w-6 h-6 right-2 top-2 z-10 cursor-pointer text-muted-foreground"
+                      onClick={() => {
+                        setIsPasswordVisible(!isPasswordVisible)
+                      }}
+                    />
+                  )}
+                </div>
               </FormControl>
               <FormMessage />
             </FormItem>

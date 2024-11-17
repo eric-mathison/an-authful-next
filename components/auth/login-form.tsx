@@ -1,11 +1,12 @@
 "use client"
 import { useFormState } from "react-dom"
-import { useRef } from "react"
+import { useRef, useContext, useState } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
+import { Loading02Icon, ViewIcon, ViewOffIcon } from "hugeicons-react"
 import { Button } from "@/components/ui/button"
 import {
   Form,
@@ -20,13 +21,15 @@ import { loginSchema } from "@/lib/schemas/login"
 import { loginFormAction } from "@/lib/actions/login-form.actions"
 import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
-import { Loading02Icon } from "hugeicons-react"
 import { ResendVerificationLink } from "@/components/auth/resend-verification-link"
+import { ModalContext } from "@/lib/providers/modal"
 
 export function LoginForm() {
   // Using useFormState to allow us to display server side validation and errors
   // also allows us to support no JS users
   const [formState, formAction] = useFormState(loginFormAction, {})
+
+  const [isPasswordVisible, setIsPasswordVisible] = useState(false)
 
   const searchParams = useSearchParams()
   const oAuthError =
@@ -34,6 +37,7 @@ export function LoginForm() {
       ? "Email is already in use with a different provider."
       : ""
 
+  const { isModal } = useContext(ModalContext)
   const formRef = useRef<HTMLFormElement>(null)
 
   const form = useForm<z.output<typeof loginSchema>>({
@@ -84,13 +88,30 @@ export function LoginForm() {
             <FormItem>
               <FormLabel>Password</FormLabel>
               <FormControl>
-                <Input
-                  placeholder="********"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  type="password"
-                  {...field}
-                />
+                <div className="relative">
+                  <Input
+                    placeholder="********"
+                    autoCapitalize="none"
+                    autoCorrect="off"
+                    type={isPasswordVisible ? "text" : "password"}
+                    {...field}
+                  />
+                  {isPasswordVisible ? (
+                    <ViewIcon
+                      className="absolute w-6 h-6 right-2 top-1.5 z-10 cursor-pointer text-muted-foreground"
+                      onClick={() => {
+                        setIsPasswordVisible(!isPasswordVisible)
+                      }}
+                    />
+                  ) : (
+                    <ViewOffIcon
+                      className="absolute w-6 h-6 right-2 top-2 z-10 cursor-pointer text-muted-foreground"
+                      onClick={() => {
+                        setIsPasswordVisible(!isPasswordVisible)
+                      }}
+                    />
+                  )}
+                </div>
               </FormControl>
               <Button
                 size="sm"
@@ -98,7 +119,9 @@ export function LoginForm() {
                 asChild
                 className="px-0 font-normal"
               >
-                <Link href="/auth/reset">Forgot Password?</Link>
+                <Link href="/auth/reset" replace={isModal}>
+                  Forgot Password?
+                </Link>
               </Button>
               <FormMessage />
             </FormItem>

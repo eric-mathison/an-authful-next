@@ -1,7 +1,7 @@
 "use client"
 import { Modal } from "@/components/modal"
 import { CardWrapper } from "@/components/auth/card-wrapper"
-import { LoginForm } from "@/components/auth/login-form"
+import { ResetPasswordForm } from "@/components/auth/reset-password-form"
 import { ModalContext } from "@/lib/providers/modal"
 
 export default function LoginModal() {
@@ -9,13 +9,12 @@ export default function LoginModal() {
     <ModalContext.Provider value={{ isModal: true }}>
       <Modal>
         <CardWrapper
-          title="Login"
-          headerLabel="Welcome back"
-          backButtonLabel="Don't have an account?"
-          backButtonHref="/register"
-          showSocial
+          title="Password Reset"
+          headerLabel="Forgot your password?"
+          backButtonLabel="Back to login"
+          backButtonHref="/login"
         >
-          <LoginForm />
+          <ResetPasswordForm />
         </CardWrapper>
       </Modal>
     </ModalContext.Provider>
