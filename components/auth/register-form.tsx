@@ -1,6 +1,6 @@
 "use client"
-import { useFormState } from "react-dom"
-import { useRef, useState } from "react"
+
+import { useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -21,11 +21,10 @@ import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
 
 export function RegisterForm() {
-  // Using useFormState to allow us to display server side validation and errors
-  // also allows us to support no JS users
-  const [formState, formAction] = useFormState(registerFormAction, {})
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | undefined>("")
+  const [success, setSuccess] = useState<string | undefined>("")
 
-  const formRef = useRef<HTMLFormElement>(null)
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
 
   const form = useForm<z.output<typeof registerSchema>>({
@@ -34,23 +33,29 @@ export function RegisterForm() {
       name: "",
       email: "",
       password: "",
-      ...(formState?.fields ?? {}),
     },
   })
 
+  const onSubmit = (data: z.output<typeof registerSchema>) => {
+    setError("")
+    setSuccess("")
+
+    startTransition(async () => {
+      const formData = new FormData()
+      if (data.email) formData.append("email", data.email)
+      if (data.password) formData.append("password", data.password)
+      if (data.name) formData.append("name", data.name)
+
+      registerFormAction(formData).then((data) => {
+        setError(data.error)
+        setSuccess(data.success)
+      })
+    })
+  }
+
   return (
     <Form {...form}>
-      <form
-        action={formAction}
-        onSubmit={(event) => {
-          event.preventDefault()
-          form.handleSubmit(() => formAction(new FormData(formRef.current!)))(
-            event
-          )
-        }}
-        className="space-y-8"
-        ref={formRef}
-      >
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -58,7 +63,7 @@ export function RegisterForm() {
             <FormItem>
               <FormLabel>Name</FormLabel>
               <FormControl>
-                <Input placeholder="John Doe" {...field} />
+                <Input placeholder="John Doe" disabled={isPending} {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -76,6 +81,7 @@ export function RegisterForm() {
                   autoCapitalize="none"
                   autoCorrect="off"
                   type="email"
+                  disabled={isPending}
                   {...field}
                 />
               </FormControl>
@@ -96,6 +102,7 @@ export function RegisterForm() {
                     autoCapitalize="none"
                     autoCorrect="off"
                     type={isPasswordVisible ? "text" : "password"}
+                    disabled={isPending}
                     {...field}
                   />
                   {isPasswordVisible ? (
@@ -119,31 +126,11 @@ export function RegisterForm() {
             </FormItem>
           )}
         />
-        {formState?.error !== "" && !formState.issues && (
-          <FormError message={formState.error} />
-        )}
-        {formState?.issues && (
-          <div>
-            <ul className="flex flex-col gap-y-1">
-              {formState.issues.map((issue) => (
-                <li key={issue} className="flex gap-1">
-                  <FormError message={issue} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {formState?.success !== "" && (
-          <FormSuccess message={formState.success} />
-        )}
-        <Button
-          disabled={form.formState.isSubmitting}
-          className="w-full"
-          type="submit"
-        >
-          {form.formState.isSubmitting && (
-            <Loading02Icon className="animate-spin w-6 h-6" />
-          )}{" "}
+
+        <FormError message={error} />
+        <FormSuccess message={success} />
+        <Button disabled={isPending} className="w-full" type="submit">
+          {isPending && <Loading02Icon className="animate-spin w-6 h-6" />}{" "}
           Create an account
         </Button>
       </form>

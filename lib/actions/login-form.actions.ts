@@ -3,34 +3,77 @@
 import { AuthError } from "next-auth"
 import { signIn } from "@/lib/auth"
 import { loginSchema } from "@/lib/schemas/login"
+import { getUserByEmail } from "@/lib/data/user"
+import { generateTwoFactorToken } from "@/lib/tokens"
+import { sendTwoFactorTokenEmail } from "@/lib/mail"
+import { getTwoFactorTokenByEmail } from "@/lib/data/two-factor-token"
+import { db } from "@/lib/db"
+import { getTwoFactorConfirmationByUserId } from "@/lib/data/two-factor-confirmation"
 
 export type FormState = {
   success?: string
   error?: string
-  fields?: Record<string, string>
-  issues?: string[]
+  field?: string
+  twoFactor?: boolean
 }
 
-export async function loginFormAction(
-  prevState: FormState,
-  data: FormData
-): Promise<FormState> {
+export async function loginFormAction(data: FormData): Promise<FormState> {
   const formData = Object.fromEntries(data)
   const parsed = loginSchema.safeParse(formData)
 
   if (!parsed.success) {
-    const fields: Record<string, string> = {}
-    for (const key of Object.keys(formData)) {
-      fields[key] = formData[key].toString()
-    }
     return {
-      error: "Validation failed",
-      fields,
-      issues: parsed.error.issues.map((issue) => issue.message),
+      error: "Invalid form data",
     }
   }
 
-  const { email, password } = parsed.data
+  const { email, password, code } = parsed.data
+
+  const existingUser = await getUserByEmail(email)
+
+  if (!existingUser || !existingUser.email || !existingUser.password) {
+    return { error: "Invalid credentials" }
+  }
+
+  if (!existingUser.emailVerified) {
+    return { error: "Email not verified", field: email }
+  }
+
+  if (existingUser.isTwoFactorEnabled && existingUser.email) {
+    if (code) {
+      const twoFactorToken = await getTwoFactorTokenByEmail(existingUser.email)
+
+      if (!twoFactorToken) return { error: "Invalid code" }
+      if (twoFactorToken.token !== code) return { error: "Invalid code" }
+
+      const hasExpired = new Date(twoFactorToken.expires) < new Date()
+      if (hasExpired) return { error: "Code expired" }
+
+      await db.twoFactorToken.delete({
+        where: { id: twoFactorToken.id },
+      })
+
+      const existingConfirmation = await getTwoFactorConfirmationByUserId(
+        existingUser.id
+      )
+      if (existingConfirmation) {
+        await db.twoFactorConfirmation.delete({
+          where: { id: existingConfirmation.id },
+        })
+      }
+
+      await db.twoFactorConfirmation.create({
+        data: {
+          userId: existingUser.id,
+        },
+      })
+    } else {
+      const twoFactorToken = await generateTwoFactorToken(existingUser.email)
+      await sendTwoFactorTokenEmail(twoFactorToken.email, twoFactorToken.token)
+
+      return { twoFactor: true }
+    }
+  }
 
   try {
     await signIn("credentials", { email, password, redirectTo: "/dashboard" })
@@ -41,17 +84,10 @@ export async function loginFormAction(
         case "CredentialsSignin":
           return {
             error: "Invalid credentials",
-            fields: parsed.data,
-          }
-        case "AccessDenied":
-          return {
-            error: "Email not verified",
-            fields: parsed.data,
           }
         default:
           return {
             error: "Something went wrong!",
-            fields: parsed.data,
           }
       }
     }

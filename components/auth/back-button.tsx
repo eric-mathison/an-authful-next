@@ -2,7 +2,7 @@
 import { useContext } from "react"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
-import { ModalContext } from "@/lib/providers/modal"
+import { ModalContext } from "@/lib/contexts/modal"
 
 type BackButtonProps = {
   label: string

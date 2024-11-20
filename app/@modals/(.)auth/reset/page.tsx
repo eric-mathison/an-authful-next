@@ -2,7 +2,7 @@
 import { Modal } from "@/components/modal"
 import { CardWrapper } from "@/components/auth/card-wrapper"
 import { ResetPasswordForm } from "@/components/auth/reset-password-form"
-import { ModalContext } from "@/lib/providers/modal"
+import { ModalContext } from "@/lib/contexts/modal"
 
 export default function LoginModal() {
   return (

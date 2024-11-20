@@ -3,6 +3,7 @@ import { PrismaAdapter } from "@auth/prisma-adapter"
 import { db } from "@/lib/db"
 import authConfig from "@/lib/auth.config"
 import { getUserById } from "./data/user"
+import { getTwoFactorConfirmationByUserId } from "@/lib/data/two-factor-confirmation"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -44,7 +45,24 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
     async signIn({ account, user }) {
       if (account?.provider !== "credentials") return true
 
-      if (!user.emailVerified) throw Error("Email not verified")
+      if (!user.emailVerified) return false
+
+      if (user.isTwoFactorEnabled) {
+        const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
+          user.id!
+        )
+
+        console.log({ twoFactorConfirmation })
+
+        if (!twoFactorConfirmation) return false
+
+        // TODO: rework this to allow user to save device to not have to redo
+        // 2fa every login
+        await db.twoFactorConfirmation.delete({
+          where: { id: twoFactorConfirmation.id },
+        })
+      }
+
       return true
     },
   },

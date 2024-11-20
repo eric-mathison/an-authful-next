@@ -1,6 +1,6 @@
 "use client"
-import { useFormState } from "react-dom"
-import { useRef, useContext, useState } from "react"
+
+import { useContext, useState, useTransition } from "react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -22,14 +22,16 @@ import { loginFormAction } from "@/lib/actions/login-form.actions"
 import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
 import { ResendVerificationLink } from "@/components/auth/resend-verification-link"
-import { ModalContext } from "@/lib/providers/modal"
+import { ModalContext } from "@/lib/contexts/modal"
 
 export function LoginForm() {
-  // Using useFormState to allow us to display server side validation and errors
-  // also allows us to support no JS users
-  const [formState, formAction] = useFormState(loginFormAction, {})
+  const [isPending, startTransition] = useTransition()
+  const [error, setError] = useState<string | undefined>("")
+  const [success, setSuccess] = useState<string | undefined>("")
+  const [field, setField] = useState<string | undefined>("")
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
+  const [twoFactor, setTwoFactor] = useState(false)
 
   const searchParams = useSearchParams()
   const oAuthError =
@@ -38,131 +40,140 @@ export function LoginForm() {
       : ""
 
   const { isModal } = useContext(ModalContext)
-  const formRef = useRef<HTMLFormElement>(null)
 
   const form = useForm<z.output<typeof loginSchema>>({
     resolver: zodResolver(loginSchema),
     defaultValues: {
       email: "",
       password: "",
-      ...(formState?.fields ?? {}),
+      code: "",
     },
   })
 
+  const onSubmit = (data: z.output<typeof loginSchema>) => {
+    setError("")
+    setSuccess("")
+
+    startTransition(async () => {
+      const formData = new FormData()
+      if (data.email) formData.append("email", data.email)
+      if (data.password) formData.append("password", data.password)
+      if (data.code) formData.append("code", data.code)
+
+      loginFormAction(formData).then((data) => {
+        if (data?.error) {
+          setError(data.error)
+          setField(data.field)
+        }
+        if (data?.success) setSuccess(data.success)
+        if (data?.twoFactor) setTwoFactor(true)
+      })
+    })
+  }
+
   return (
     <Form {...form}>
-      <form
-        action={formAction}
-        onSubmit={(event) => {
-          event.preventDefault()
-          form.handleSubmit(() => formAction(new FormData(formRef.current!)))(
-            event
-          )
-        }}
-        className="space-y-8"
-        ref={formRef}
-      >
-        <FormField
-          control={form.control}
-          name="email"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Email Address</FormLabel>
-              <FormControl>
-                <Input
-                  placeholder="John@email.com"
-                  autoCapitalize="none"
-                  autoCorrect="off"
-                  type="email"
-                  {...field}
-                />
-              </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        <FormField
-          control={form.control}
-          name="password"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Password</FormLabel>
-              <FormControl>
-                <div className="relative">
-                  <Input
-                    placeholder="********"
-                    autoCapitalize="none"
-                    autoCorrect="off"
-                    type={isPasswordVisible ? "text" : "password"}
-                    {...field}
-                  />
-                  {isPasswordVisible ? (
-                    <ViewIcon
-                      className="absolute w-6 h-6 right-2 top-1.5 z-10 cursor-pointer text-muted-foreground"
-                      onClick={() => {
-                        setIsPasswordVisible(!isPasswordVisible)
-                      }}
-                    />
-                  ) : (
-                    <ViewOffIcon
-                      className="absolute w-6 h-6 right-2 top-2 z-10 cursor-pointer text-muted-foreground"
-                      onClick={() => {
-                        setIsPasswordVisible(!isPasswordVisible)
-                      }}
-                    />
-                  )}
-                </div>
-              </FormControl>
-              <Button
-                size="sm"
-                variant="link"
-                asChild
-                className="px-0 font-normal"
-              >
-                <Link href="/auth/reset" replace={isModal}>
-                  Forgot Password?
-                </Link>
-              </Button>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-        {oAuthError !== "" && !formState?.error && (
-          <FormError message={oAuthError} />
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+        {twoFactor && (
+          <FormField
+            control={form.control}
+            name="code"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Two Factor Code</FormLabel>
+                <FormControl>
+                  <Input placeholder="123456" {...field} disabled={isPending} />
+                </FormControl>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         )}
-        {formState?.error && !formState?.issues && (
+        {!twoFactor && (
+          <>
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <Input
+                      placeholder="John@email.com"
+                      autoCapitalize="none"
+                      autoCorrect="off"
+                      type="email"
+                      disabled={isPending}
+                      {...field}
+                    />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="password"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Password</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Input
+                        placeholder="********"
+                        autoCapitalize="none"
+                        autoCorrect="off"
+                        type={isPasswordVisible ? "text" : "password"}
+                        disabled={isPending}
+                        {...field}
+                      />
+                      {isPasswordVisible ? (
+                        <ViewIcon
+                          className="absolute w-6 h-6 right-2 top-1.5 z-10 cursor-pointer text-muted-foreground"
+                          onClick={() => {
+                            setIsPasswordVisible(!isPasswordVisible)
+                          }}
+                        />
+                      ) : (
+                        <ViewOffIcon
+                          className="absolute w-6 h-6 right-2 top-2 z-10 cursor-pointer text-muted-foreground"
+                          onClick={() => {
+                            setIsPasswordVisible(!isPasswordVisible)
+                          }}
+                        />
+                      )}
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                  <Button
+                    size="sm"
+                    variant="link"
+                    asChild
+                    className="px-0 font-normal"
+                  >
+                    <Link href="/auth/reset" replace={isModal}>
+                      Forgot Password?
+                    </Link>
+                  </Button>
+                </FormItem>
+              )}
+            />
+          </>
+        )}
+        {oAuthError !== "" && <FormError message={oAuthError} />}
+        {error && (
           <div className="flex flex-col gap-1">
-            {formState?.error !== "" && !formState.issues && (
-              <FormError message={formState.error} />
-            )}
-            {formState?.error === "Email not verified" && !formState.issues && (
-              <ResendVerificationLink email={formState?.fields?.email!} />
+            <FormError message={error} />
+            {error === "Email not verified" && (
+              <ResendVerificationLink email={field} />
             )}
           </div>
         )}
-        {formState?.issues && (
-          <div>
-            <ul className="flex flex-col gap-y-1">
-              {formState.issues.map((issue) => (
-                <li key={issue} className="flex gap-1">
-                  <FormError message={issue} />
-                </li>
-              ))}
-            </ul>
-          </div>
-        )}
-        {formState?.success !== "" && (
-          <FormSuccess message={formState.success} />
-        )}
-        <Button
-          disabled={form.formState.isSubmitting}
-          className="w-full"
-          type="submit"
-        >
-          {form.formState.isSubmitting && (
-            <Loading02Icon className="animate-spin w-6 h-6" />
-          )}{" "}
-          Log in
+
+        <FormSuccess message={success} />
+        <Button disabled={isPending} className="w-full" type="submit">
+          {isPending && <Loading02Icon className="animate-spin w-6 h-6" />}{" "}
+          {twoFactor ? "Confirm" : "Log in"}
         </Button>
       </form>
     </Form>
