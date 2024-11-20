@@ -19,7 +19,6 @@ import { resetPasswordFormAction } from "@/lib/actions/reset-password-form.actio
 import { FormError } from "@/components/form-error"
 import { FormSuccess } from "@/components/form-success"
 import { Loading02Icon } from "hugeicons-react"
-import { ResendVerificationLink } from "@/components/auth/resend-verification-link"
 
 export function ResetPasswordForm() {
   const [isPending, startTransition] = useTransition()
