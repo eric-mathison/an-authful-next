@@ -1,3 +1,4 @@
+import { Suspense } from "react"
 import { CardWrapper } from "@/components/auth/card-wrapper"
 import { LoginForm } from "@/components/auth/login-form"
 
@@ -10,7 +11,9 @@ export default function LoginPage() {
       backButtonHref="/register"
       showSocial
     >
-      <LoginForm />
+      <Suspense>
+        <LoginForm />
+      </Suspense>
     </CardWrapper>
   )
 }
