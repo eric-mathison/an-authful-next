@@ -1,12 +1,12 @@
-import { getSession } from "@/lib/session"
+import { currentUser } from "@/lib/dal"
 import { signOut } from "@/lib/auth"
 
 export default async function DashboardPage() {
-  const session = await getSession()
+  const user = await currentUser()
   return (
     <>
       <div className="p-8 sm:p-20">Dashboard</div>
-      <p>{JSON.stringify(session)}</p>
+      <p>{JSON.stringify(user)}</p>
       <form
         action={async () => {
           "use server"

@@ -1,13 +1,13 @@
-import { getSession } from "@/lib/session"
+import { currentUser } from "@/lib/dal"
 
 export async function GET() {
-  const session = await getSession()
+  const user = await currentUser()
 
-  if (!session) {
+  if (!user) {
     return new Response(null, { status: 401 })
   }
 
   return Response.json({
-    session,
+    user,
   })
 }
