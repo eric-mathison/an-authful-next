@@ -4,7 +4,7 @@ import { auth } from "@/lib/auth"
 export const currentUser = cache(async () => {
   const session = await auth()
   if (!session) return null
-  return session
+  return session.user
 })
 
 export const currentRole = async () => {

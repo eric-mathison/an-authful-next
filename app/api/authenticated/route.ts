@@ -8,6 +8,6 @@ export async function GET() {
   }
 
   return Response.json({
-    user,
+    status: "success",
   })
 }

@@ -4,6 +4,7 @@ import { db } from "@/lib/db"
 import authConfig from "@/lib/auth.config"
 import { getUserById } from "./data/user"
 import { getTwoFactorConfirmationByUserId } from "@/lib/data/two-factor-confirmation"
+import { getAccountByUserId } from "@/lib/data/account"
 
 export const { handlers, signIn, signOut, auth } = NextAuth({
   adapter: PrismaAdapter(db),
@@ -28,6 +29,12 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
 
       if (!existingUser) return token
 
+      const existingAccount = await getAccountByUserId(existingUser.id)
+
+      token.isOAuth = !!existingAccount
+      token.name = existingUser.name
+      token.email = existingUser.email
+      token.picture = existingUser.image
       token.role = existingUser.role
       token.isTwoFactorEnabled = existingUser.isTwoFactorEnabled
 
@@ -43,6 +50,10 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
       }
 
       if (session.user) {
+        session.user.name = token.name
+        session.user.email = token.email as string
+        session.user.image = token.picture
+        session.user.isOAuth = token.isOAuth as boolean
         session.user.isTwoFactorEnabled = token.isTwoFactorEnabled as boolean
       }
       return session
@@ -56,8 +67,6 @@ export const { handlers, signIn, signOut, auth } = NextAuth({
         const twoFactorConfirmation = await getTwoFactorConfirmationByUserId(
           user.id!
         )
-
-        console.log({ twoFactorConfirmation })
 
         if (!twoFactorConfirmation) return false
 

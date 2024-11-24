@@ -1,5 +1,7 @@
+import { Suspense } from "react"
 import Link from "next/link"
 import { ZapIcon } from "hugeicons-react"
+import { UserNav } from "@/components/user-nav"
 
 export function Header() {
   return (
@@ -11,24 +13,9 @@ export function Header() {
         </span>
       </Link>
       <nav className="flex gap-4 sm:gap-6">
-        <Link
-          className="text-sm font-medium hover:text-accent-foreground transition-colors"
-          href="#features"
-        >
-          Features
-        </Link>
-        <Link
-          className="text-sm font-medium hover:text-accent-foreground transition-colors"
-          href="/login"
-        >
-          Log in
-        </Link>
-        <Link
-          className="text-sm font-medium hover:text-accent-foreground transition-colors"
-          href="/register"
-        >
-          Register
-        </Link>
+        <Suspense>
+          <UserNav />
+        </Suspense>
       </nav>
     </header>
   )
