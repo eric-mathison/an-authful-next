@@ -2,6 +2,8 @@
 
 Testing the latest Next.js features and integration with Auth.js
 
+![screenshot](./assets/an-authful-next.png)
+
 ## Features
 
 - MongoDB
