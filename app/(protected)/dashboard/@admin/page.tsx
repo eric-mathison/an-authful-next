@@ -1,3 +1,5 @@
+// This is a parallel route that loads in the dashboard layout
+
 "use client"
 
 import { useCurrentRole } from "@/lib/hooks/useCurrentRole"

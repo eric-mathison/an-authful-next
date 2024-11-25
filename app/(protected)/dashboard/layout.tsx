@@ -1,6 +1,7 @@
 import React from "react"
 
 export default function DashboardLayout({
+  // parallel routes are added as props to the parent layout
   admin,
   authorized,
   children,
