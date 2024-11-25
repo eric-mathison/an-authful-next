@@ -76,8 +76,12 @@ export async function loginFormAction(data: FormData): Promise<FormState> {
   }
 
   try {
-    await signIn("credentials", { email, password, redirectTo: "/dashboard" })
-    return { success: "" }
+    await signIn("credentials", {
+      email,
+      password,
+      redirect: false,
+    })
+    return { success: "Successfully logged in" }
   } catch (error) {
     if (error instanceof AuthError) {
       switch (error.type) {

@@ -1,4 +1,5 @@
 import NextAuth from "next-auth"
+import { NextResponse } from "next/server"
 import authConfig from "@/lib/auth.config"
 
 const protectedRoutes = ["/dashboard", "/settings"]
@@ -20,12 +21,12 @@ export default auth((req) => {
 
   if (isProtectedRoute && !isLoggedIn) {
     const redirectUrl = new URL("/login", nextUrl)
-    return Response.redirect(redirectUrl)
+    return NextResponse.redirect(redirectUrl)
   }
 
   if ((isAuthRoute && isLoggedIn) || (isMainRoute && isLoggedIn)) {
     const redirectUrl = new URL("/dashboard", nextUrl)
-    return Response.redirect(redirectUrl)
+    return NextResponse.redirect(redirectUrl)
   }
 })
 

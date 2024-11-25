@@ -1,6 +1,8 @@
 "use client"
 
 import { useContext, useState, useTransition } from "react"
+import { useSession } from "next-auth/react"
+import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -32,6 +34,9 @@ export function LoginForm() {
 
   const [isPasswordVisible, setIsPasswordVisible] = useState(false)
   const [twoFactor, setTwoFactor] = useState(false)
+
+  const { update } = useSession()
+  const router = useRouter()
 
   const searchParams = useSearchParams()
   const oAuthError =
@@ -65,7 +70,11 @@ export function LoginForm() {
           setError(data.error)
           setField(data.field)
         }
-        if (data?.success) setSuccess(data.success)
+        if (data?.success) {
+          setSuccess(data.success)
+          update()
+          router.push("/dashboard")
+        }
         if (data?.twoFactor) setTwoFactor(true)
       })
     })
